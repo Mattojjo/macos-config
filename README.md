@@ -5,5 +5,9 @@
 2. Copy all of its content to `~/.config/` path (Make sure to BackUp current configs)
 3. Then cleanup it self removing the repo directory
 ```
+curl -fsSL https://raw.githubusercontent.com/Mattojjo/config/main/setup.sh | bash
+```
+or
+```
 git clone https://github.com/Mattojjo/config.git /tmp/config && cp -r /tmp/config/* ~/.config/ && rm -rf /tmp/configs
 ```
