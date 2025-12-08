@@ -7,8 +7,3 @@
 ```
 git clone https://github.com/Mattojjo/config.git /tmp/config && cp -r /tmp/config/* ~/.config/ && rm -rf /tmp/configs
 ```
----
-# Ubuntu
-
-
-# Omarchy Arch
