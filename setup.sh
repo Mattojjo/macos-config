@@ -2,6 +2,7 @@
 REPO_URL="https://github.com/Mattojjo/macos-config.git"
 TEMP_DIR="/tmp/config"
 TARGET_DIR="$HOME/.config"
+ZSHRC="$HOME/.zshrc"
 
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -38,9 +39,36 @@ else
         echo "Error: Install failed"
         exit 1
     fi
+
+    echo "Writing zshrc"
+
     
     echo "Cleaning up temporary files..."
     rm -rf "$TEMP_DIR"
+fi
+
+# Configure .zshrc
+if [ -f "$ZSHRC" ]; then
+    cp "$ZSHRC" "$ZSHRC.backup.$(date +%Y%m%d_%H%M%S)"
+fi
+
+if ! grep -q "LOAD MODULAR CONFIGURATIONS" "$ZSHRC" 2>/dev/null; then
+    cat >> "$ZSHRC" << 'EOF'
+
+# ============================================
+# PROMPT CONFIGURATION
+# ============================================
+export PROMPT="%F{214}%~%f $ "
+
+# ============================================
+# LOAD MODULAR CONFIGURATIONS
+# ============================================
+# Source all .zsh files from ~/.config/zsh/
+for config_file in ~/.config/zsh/*.zsh; do
+  [ -f "$config_file" ] && source "$config_file"
+done
+EOF
+    echo ".zshrc configured!"
 fi
 
 echo "Setup complete!"
