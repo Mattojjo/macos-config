@@ -71,4 +71,18 @@ EOF
     echo ".zshrc configured!"
 fi
 
+# INSTALL BREW PACKAGES
+if command -v brew &> /dev/null; then
+    echo "Installing zsh plugins..."
+    brew install eza # Modern replacement for 'ls'
+    brew install nvim # Neovim
+    brew insatll eye-d3 # Eye-D3 for managing ID3 tags in audio files
+    brew insatll fastfetch # FastFetch for system information
+    brew install zsh-autosuggestions
+    brew install zsh-syntax-highlighting
+else
+    echo "Warning: Homebrew not found. Please install it first."
+fi
+
+
 echo "Setup complete!"
