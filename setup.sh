@@ -61,6 +61,7 @@ if command -v brew &> /dev/null; then
     brew install nvim || echo "Failed to install nvim"
     brew install btop || echo "Failed to install btop"
     brew install eyed3 || echo "Failed to install eyed3"
+    brew install ffmpeg || echo "Failed to install ffmpeg
     brew install fastfetch || echo "Failed to install fastfetch"
     brew install zsh-autosuggestions || echo "Failed to install zsh-autosuggestions"
     brew install zsh-syntax-highlighting || echo "Failed to install zsh-syntax-highlighting"
