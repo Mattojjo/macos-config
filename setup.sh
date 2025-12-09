@@ -1,51 +1,35 @@
+#!/bin/bash
+
 # Configuration
 REPO_URL="https://github.com/Mattojjo/macos-config.git"
 TEMP_DIR="/tmp/config"
 TARGET_DIR="$HOME/.config"
 ZSHRC="$HOME/.zshrc"
 
-# Get the directory where this script is located
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Ensure target directory exists
+mkdir -p "$TARGET_DIR"
 
-# Check if we're running from a local clone (scripts dir exists)
-if [ -d "$SCRIPT_DIR/scripts" ]; then
-    echo "Running from local repository..."
-    
-    bash "$SCRIPT_DIR/scripts/clone.sh"
-    if [ $? -ne 0 ]; then
-        echo "Error: Clone failed"
-        exit 1
-    fi
-    
-    bash "$SCRIPT_DIR/scripts/install.sh"
-    if [ $? -ne 0 ]; then
-        echo "Error: Install failed"
-        exit 1
-    fi
-else
-    # Running standalone (via curl)
-    echo "Running standalone setup..."
-    
-    echo "Cloning configuration repository..."
-    git clone "$REPO_URL" "$TEMP_DIR"
-    if [ $? -ne 0 ]; then
-        echo "Error: Clone failed"
-        exit 1
-    fi
-    
-    echo "Installing configuration files..."
-    cp -r "$TEMP_DIR"/* "$TARGET_DIR"/
-    if [ $? -ne 0 ]; then
-        echo "Error: Install failed"
-        exit 1
-    fi
-
-    echo "Writing zshrc"
-
-    
-    echo "Cleaning up temporary files..."
-    rm -rf "$TEMP_DIR"
+# Clone configuration repository
+echo "Cloning configuration repository..."
+git clone "$REPO_URL" "$TEMP_DIR"
+if [ $? -ne 0 ]; then
+    echo "Error: Clone failed"
+    exit 1
 fi
+
+# Install configuration files
+echo "Installing configuration files..."
+mkdir -p "$TARGET_DIR/zsh"
+mkdir -p "$TARGET_DIR/nvim"
+mkdir -p "$TARGET_DIR/btop"
+
+cp -r "$TEMP_DIR/zsh/"* "$TARGET_DIR/zsh/" 2>/dev/null || echo "No zsh configs found"
+cp -r "$TEMP_DIR/nvim/"* "$TARGET_DIR/nvim/" 2>/dev/null || echo "No nvim configs found"
+cp -r "$TEMP_DIR/btop/"* "$TARGET_DIR/btop/" 2>/dev/null || echo "No btop configs found"
+
+# Clean up temporary files
+echo "Cleaning up temporary files..."
+rm -rf "$TEMP_DIR"
 
 # Configure .zshrc
 if [ -f "$ZSHRC" ]; then
@@ -54,7 +38,6 @@ fi
 
 if ! grep -q "LOAD MODULAR CONFIGURATIONS" "$ZSHRC" 2>/dev/null; then
     cat >> "$ZSHRC" << 'EOF'
-
 # ============================================
 # PROMPT CONFIGURATION
 # ============================================
@@ -73,16 +56,16 @@ fi
 
 # INSTALL BREW PACKAGES
 if command -v brew &> /dev/null; then
-    echo "Installing zsh plugins..."
-    brew install eza # Modern replacement for 'ls'
-    brew install nvim # Neovim
-    brew insatll eye-d3 # Eye-D3 for managing ID3 tags in audio files
-    brew insatll fastfetch # FastFetch for system information
-    brew install zsh-autosuggestions
-    brew install zsh-syntax-highlighting
+    echo "Installing zsh plugins and tools..."
+    brew install eza || echo "Failed to install eza"
+    brew install nvim || echo "Failed to install nvim"
+    brew install btop || echo "Failed to install btop"
+    brew install eyed3 || echo "Failed to install eyed3"
+    brew install fastfetch || echo "Failed to install fastfetch"
+    brew install zsh-autosuggestions || echo "Failed to install zsh-autosuggestions"
+    brew install zsh-syntax-highlighting || echo "Failed to install zsh-syntax-highlighting"
 else
     echo "Warning: Homebrew not found. Please install it first."
 fi
 
-
-echo "Setup complete!"
+echo "Setup complete! Restart your terminal or run: source ~/.zshrc"
