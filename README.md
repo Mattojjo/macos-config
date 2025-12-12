@@ -37,6 +37,7 @@ The setup script installs:
 - `eyed3` - MP3 metadata editor
 - `zsh-autosuggestions` - Zsh plugin
 - `zsh-syntax-highlighting` - Zsh plugin
+- `speedtetst` - Speed test by Ookla
 
 ## 📁 Installation Paths
 
