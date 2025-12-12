@@ -64,6 +64,9 @@ if command -v brew &> /dev/null; then
     brew install fastfetch || echo "Failed to install fastfetch"
     brew install zsh-autosuggestions || echo "Failed to install zsh-autosuggestions"
     brew install zsh-syntax-highlighting || echo "Failed to install zsh-syntax-highlighting"
+    brew tap teamookla/speedtest
+    brew update
+    brew install speedtest --force || echo "Failed to install speedtest"
 else
     echo "Warning: Homebrew not found. Please install it first."
 fi
