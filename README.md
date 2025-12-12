@@ -34,7 +34,6 @@ The setup script installs:
 - `btop` - System monitor
 - `eza` - Modern ls replacement
 - `fastfetch` - System info display
-- `ffmpeg` - Media processing
 - `eyed3` - MP3 metadata editor
 - `zsh-autosuggestions` - Zsh plugin
 - `zsh-syntax-highlighting` - Zsh plugin
