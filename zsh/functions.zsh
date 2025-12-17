@@ -10,3 +10,24 @@ d3() {
   fi
   eyeD3 --add-image "$1:FRONT_COVER" "$2"
 }
+
+# Convert video to H.265/HEVC with high quality
+ff() {
+  if [ $# -ne 1 ]; then
+    echo "Usage: ff <input_file>"
+    return 1
+  fi
+  local input="$1"
+  local ext="${input##*.}"
+  local base="${input%.*}"
+  local output="${base}.hevc.${ext}"
+  ffmpeg -i "$input" \
+    -map 0 \
+    -c:v libx265 \
+    -preset slow \
+    -crf 20 \
+    -pix_fmt yuv420p \
+    -tag:v hvc1 \
+    -c:a copy \
+    "$output"
+}
