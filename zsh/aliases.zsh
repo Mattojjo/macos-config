@@ -10,6 +10,9 @@ alias gc='git checkout'
 alias gcm='git commit -m'
 alias rm='rm -rf'
 alias re='source ~/.zshrc'
+alias .='cd'
+alias ..='cd ..'
+alias ...='cd ../..'
 
 # ============================================
 # EZA (modern ls replacement)
