@@ -25,7 +25,7 @@ ff() {
     -map 0 \
     -c:v libx265 \
     -preset slow \
-    -crf 20 \
+    -crf 22 \
     -pix_fmt yuv420p \
     -tag:v hvc1 \
     -c:a copy \
