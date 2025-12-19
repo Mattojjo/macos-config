@@ -24,17 +24,16 @@ ff() {
     local base="${input%.*}"
     local output="${base}.ffmpeg.${ext}"
     
-    echo "Encoding: $input -> $output"
-    
     ffmpeg -i "$input" \
+        -map 0:a \
         -c:v libx265 \
         -preset slow \
         -crf 24 \
         -pix_fmt yuv420p \
         -profile:v main \
         -level 5.1 \
-        -c:a copy \
+        -x265-params "aq-mode=3:psy-rd=1.0" \
         -tag:v hvc1 \
-        -progress pipe:1 \
+        -c:a copy \
         "$output"
 }
