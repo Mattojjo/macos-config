@@ -14,24 +14,27 @@ d3() {
 
 # Convert video to H.265/HEVC with high quality
 ff() {
-  if [ $# -ne 1 ]; then
-    echo "Usage: ffmpeg <input_file>"
-    return 1
-  fi
-
-  local input="$1"
-  local ext="${input##*.}"
-  local base="${input%.*}"
-  local output="${base}.ffmpeg.${ext}"
-
-  ffmpeg -i "$input" \
-    -map 0 \
-    -c:v libx265 \
-    -preset slow \
-    -crf 23 \
-    -pix_fmt yuv420p \
-    -x265-params "aq-mode=3:aq-strength=1.0:psy-rd=2.0:rd=3:level-idc=4.1" \
-    -tag:v hvc1 \
-    -c:a copy \
-  "$output"
+    if [ $# -ne 1 ]; then
+        echo "Usage: ff <input_file>"
+        return 1
+    fi
+    
+    local input="$1"
+    local ext="${input##*.}"
+    local base="${input%.*}"
+    local output="${base}.ffmpeg.${ext}"
+    
+    echo "Encoding: $input -> $output"
+    
+    ffmpeg -i "$input" \
+        -c:v libx265 \
+        -preset slow \
+        -crf 24 \
+        -pix_fmt yuv420p \
+        -profile:v main \
+        -level 5.1 \
+        -c:a copy \
+        -tag:v hvc1 \
+        -progress pipe:1 \
+        "$output"
 }
