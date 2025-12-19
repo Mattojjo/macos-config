@@ -14,17 +14,24 @@ d3() {
 
 # Convert video to H.265/HEVC with high quality
 ff() {
-    if [ $# -ne 1 ]; then
-        echo "Usage: ff <input_file>"
+    if [ $# -lt 1 ] || [ $# -gt 2 ]; then
+        echo "Usage: ff <input_file> [end_time]"
+        echo "Example: ff movie.mkv 1:30:46"
         return 1
     fi
     
     local input="$1"
+    local end_time="$2"
     local ext="${input##*.}"
     local base="${input%.*}"
     local output="${base}.ffmpeg.${ext}"
     
-    ffmpeg -i "$input" \
+    local time_args=()
+    if [ -n "$end_time" ]; then
+        time_args=(-to "$end_time")
+    fi
+    
+    ffmpeg -i "$input" "${time_args[@]}" \
         -map 0:v \
         -map 0:a \
         -c:v libx265 \
