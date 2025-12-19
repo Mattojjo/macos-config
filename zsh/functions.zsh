@@ -25,6 +25,7 @@ ff() {
     local output="${base}.ffmpeg.${ext}"
     
     ffmpeg -i "$input" \
+        -map 0:v \
         -map 0:a \
         -c:v libx265 \
         -preset slow \
