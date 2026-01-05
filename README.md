@@ -2,6 +2,10 @@
 # 🍎 macOS Config
 
 My personal dotfiles and configuration for a fresh macOS setup. Includes configs for Neovim, Zsh, and btop.
+### Important: 
+- Plugings will need to be change to `source $(brew --prefix)/share/<path>` instead of `source /opt/homebrew/share/<path>` if installed on a intel machine since brew locations differ.
+
+- My setup assumes you have Homebrew installed. If not, please install it first from [https://brew.sh/](https://brew.sh/).
 
 ## 📦 What's Included
 
