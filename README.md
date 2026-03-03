@@ -2,8 +2,8 @@
 # 🍎 macOS Config
 
 My personal dotfiles and configuration for a fresh macOS setup. Includes configs for Neovim, Zsh, and btop.
-### Important: 
-- Plugings will need to be change to `source $(brew --prefix)/share/<path>` instead of `source /opt/homebrew/share/<path>` if installed on a intel machine since brew locations differ.
+### Important:
+- Plugins may need to use `source $(brew --prefix)/share/<path>` instead of `/opt/homebrew/share/<path>` on Intel macs because Homebrew installs to different prefixes.
 
 - My setup assumes you have Homebrew installed. If not, please install it first from [https://brew.sh/](https://brew.sh/).
 
@@ -41,7 +41,7 @@ The setup script installs:
 - `eyed3` - MP3 metadata editor
 - `zsh-autosuggestions` - Zsh plugin
 - `zsh-syntax-highlighting` - Zsh plugin
-- `speedtetst` - Speed test by Ookla
+- `speedtest` - Speed test by Ookla
 
 ## 📁 Installation Paths
 

@@ -1,4 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
+IFS=$'\n\t'
 
 # Backup and update configuration files from GitHub
 # Always fetches latest from remote repository
@@ -11,7 +13,7 @@ NC='\033[0m' # No Color
 
 # Repository configuration
 REPO_URL="https://github.com/Mattojjo/macos-config.git"
-TEMP_DIR="/tmp/macos-config-update"
+TEMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/macos-config-update.XXXXXX")"
 
 # Backup directory with timestamp
 BACKUP_DIR="$HOME/.config/backup_$(date +%Y%m%d_%H%M%S)"
@@ -61,7 +63,11 @@ for config in "${CONFIGS[@]}"; do
     if [ -d "$SOURCE_DIR/$config" ]; then
         echo -e "${GREEN}Updating ~/.config/$config from repository${NC}"
         mkdir -p "$HOME/.config/$config"
-        cp -r "$SOURCE_DIR/$config/"* "$HOME/.config/$config/"
+        if command -v rsync >/dev/null 2>&1; then
+            rsync -a "$SOURCE_DIR/$config/" "$HOME/.config/$config/"
+        else
+            cp -a "$SOURCE_DIR/$config/"* "$HOME/.config/$config/" 2>/dev/null || true
+        fi
     else
         echo -e "${RED}Warning: $SOURCE_DIR/$config not found in repository${NC}"
     fi

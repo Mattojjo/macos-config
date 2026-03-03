@@ -30,6 +30,7 @@ d3() {
   # ============================================
   local flag_all=false
   local flag_force=false
+  local flag_yes=false
   local arg_image=""
   local arg_artist=""
   local arg_album=""
@@ -96,6 +97,22 @@ d3() {
   [ -n "$arg_image" ] && do_image=true
   [ -n "$arg_artist" ] && do_artist=true
   [ -n "$arg_album" ] && do_album=true
+
+  # Check required commands early (fail fast for core tools)
+  if ! command -v ffmpeg >/dev/null 2>&1; then
+    echo "Error: ffmpeg not found. Please install ffmpeg.";
+    return 1
+  fi
+  if ! command -v ffprobe >/dev/null 2>&1; then
+    echo "Error: ffprobe not found. Please install ffprobe.";
+    return 1
+  fi
+  if command -v eyeD3 >/dev/null 2>&1; then
+    eyeD3_available=true
+  else
+    eyeD3_available=false
+    echo "⚠️  eyeD3 not found - MP3 tagging will be skipped"
+  fi
   
   # ============================================
   # MODE: BATCH PROCESSING (-all flag)
@@ -115,7 +132,7 @@ d3() {
       # Run force standardization first if -force flag is set
       if $flag_force; then
         echo "🔧 Force standardizing metadata..."
-        _d3_force_internal "${album_dir%/}" "true" "true"
+        _d3_force_internal "${album_dir%/}" "true" "true" "$flag_yes"
       fi
       
       # Look for cover.jpg specifically
@@ -158,7 +175,7 @@ d3() {
   # ============================================
   if $flag_force && ! $flag_all; then
     local dir="${positional_args[1]:-.}"
-    _d3_force_internal "$dir" "$do_artist" "$do_album"
+    _d3_force_internal "$dir" "$do_artist" "$do_album" "$flag_yes"
     return $?
   fi
   
@@ -200,10 +217,11 @@ _d3_process_files() {
   
   for file in "${files[@]}"; do
     local ext="${file##*.}"
+    ext="${ext:l}"
     case "$ext" in
       m4a|mp4|m4v)
         # Use ffmpeg for M4A/MP4 files
-        local temp="${file%.*}.temp.${ext}"
+        local temp="$(mktemp "${TMPDIR:-/tmp}/d3.XXXXXX").${ext}"
         echo "Processing: $file"
         
         local metadata_args=()
@@ -216,7 +234,7 @@ _d3_process_files() {
         
         if [[ "$do_image" == "true" ]] && [ -f "$image" ]; then
           # With artwork
-          if ffmpeg -y -i "$file" -i "$image" -map 0:a -map 1:v -c:a copy -c:v copy "${metadata_args[@]}" -metadata:s:v title="Album cover" -metadata:s:v comment="Cover (front)" -disposition:v attached_pic "$temp" 2>/dev/null; then
+          if ffmpeg -y -i "$file" -i "$image" -map 0:a -map 1:v -c:a copy -c:v copy "${metadata_args[@]}" -metadata:s:v title="Album cover" -metadata:s:v comment="Cover (front)" -disposition:v attached_pic "$temp"; then
             mv "$temp" "$file"
             echo "✓ Added artwork to: $file"
           else
@@ -225,7 +243,7 @@ _d3_process_files() {
           fi
         elif [ ${#metadata_args[@]} -gt 0 ]; then
           # Metadata only (no artwork)
-          if ffmpeg -y -i "$file" -map 0 -c copy "${metadata_args[@]}" "$temp" 2>/dev/null; then
+          if ffmpeg -y -i "$file" -map 0 -c copy "${metadata_args[@]}" "$temp"; then
             mv "$temp" "$file"
             echo "✓ Updated metadata: $file"
           else
@@ -247,7 +265,11 @@ _d3_process_files() {
           eyed3_args+=(--album "$album")
         fi
         if [ ${#eyed3_args[@]} -gt 0 ]; then
-          eyeD3 "${eyed3_args[@]}" "$file"
+          if [ "$eyeD3_available" = true ]; then
+            eyeD3 "${eyed3_args[@]}" "$file"
+          else
+            echo "⚠️  eyeD3 not available; skipping MP3 tagging for $file"
+          fi
         fi
         ;;
       *)
@@ -264,6 +286,7 @@ _d3_force_internal() {
   local dir="${1:-.}"
   local do_artist="${2:-true}"
   local do_album="${3:-true}"
+  local do_yes="${4:-false}"
   
   if [ ! -d "$dir" ]; then
     echo "Error: Directory not found: $dir"
@@ -279,12 +302,15 @@ _d3_force_internal() {
   declare -A year_counts
   local -a files
   
-  # Collect all audio files and their metadata
-  for file in "$dir"/*.{m4a,mp3,mp4,m4v}(N); do
-    [ -f "$file" ] || continue
-    files+=("$file")
+  # Collect all audio files and their metadata (portable globbing)
+  shopt -s nullglob 2>/dev/null || true
+  for f in "$dir"/*.m4a "$dir"/*.mp3 "$dir"/*.mp4 "$dir"/*.m4v; do
+    [ -f "$f" ] || continue
+    files+=("$f")
     
+    local file="$f"
     local ext="${file##*.}"
+    ext="${ext:l}"
     
     case "$ext" in
       m4a|mp4|m4v)
@@ -297,7 +323,7 @@ _d3_force_internal() {
         ;;
       mp3)
         # Use eyeD3 for mp3 files
-        if command -v eyeD3 &>/dev/null; then
+        if [ "$eyeD3_available" = true ]; then
           local info=$(eyeD3 "$file" 2>/dev/null)
           local album=$(echo "$info" | grep "^album:" | sed 's/^album: //')
           local artist=$(echo "$info" | grep "^artist:" | sed 's/^artist: //')
@@ -362,10 +388,14 @@ _d3_force_internal() {
   [ -n "$max_year" ] && echo "  Year: $max_year ($max_year_count/${#files[@]} files)"
   echo ""
   
-  # Ask for confirmation
-  echo -n "Apply these metadata values to all files? (y/N) "
-  read -q REPLY
-  echo ""
+  # Confirmation (respect -y/--yes non-interactive flag)
+  if [[ "$do_yes" == "true" ]]; then
+    REPLY="y"
+  else
+    echo -n "Apply these metadata values to all files? (y/N) "
+    read -r REPLY
+    echo ""
+  fi
   
   if [[ ! $REPLY =~ ^[Yy]$ ]]; then
     echo "Cancelled."
@@ -383,7 +413,7 @@ _d3_force_internal() {
     case "$ext" in
       m4a|mp4|m4v)
         # Use ffmpeg to update metadata
-        local temp="${file%.*}.temp.${ext}"
+        local temp="$(mktemp "${TMPDIR:-/tmp}/d3.XXXXXX").${ext}"
         local metadata_args=()
         
         if [[ "$do_album" == "true" ]] && [ -n "$max_album" ]; then
@@ -400,7 +430,7 @@ _d3_force_internal() {
         fi
         
         if [ ${#metadata_args[@]} -gt 0 ]; then
-          if ffmpeg -i "$file" -map 0 -c copy "${metadata_args[@]}" "$temp" 2>/dev/null; then
+          if ffmpeg -i "$file" -map 0 -c copy "${metadata_args[@]}" "$temp"; then
             mv "$temp" "$file"
             echo "  ✓ Updated"
           else

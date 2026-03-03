@@ -1,8 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
+IFS=$'\n\t'
 
 # Configuration
 REPO_URL="https://github.com/Mattojjo/macos-config.git"
-TEMP_DIR="/tmp/config"
+TEMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/macos-config.XXXXXX")"
 TARGET_DIR="$HOME/.config"
 ZSHRC="$HOME/.zshrc"
 
@@ -11,10 +13,11 @@ mkdir -p "$TARGET_DIR"
 
 # Clone configuration repository
 echo "Cloning configuration repository..."
-git clone "$REPO_URL" "$TEMP_DIR"
-if [ $? -ne 0 ]; then
-    echo "Error: Clone failed"
-    exit 1
+if ! command -v git >/dev/null 2>&1; then
+  echo "Error: git not found. Please install git."; rm -rf "$TEMP_DIR"; exit 1
+fi
+if ! git clone --depth 1 "$REPO_URL" "$TEMP_DIR"; then
+  echo "Error: Clone failed"; rm -rf "$TEMP_DIR"; exit 1
 fi
 
 # Install configuration files
