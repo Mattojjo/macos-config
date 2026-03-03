@@ -14,6 +14,7 @@ NC='\033[0m' # No Color
 # Repository configuration
 REPO_URL="https://github.com/Mattojjo/macos-config.git"
 TEMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/macos-config-update.XXXXXX")"
+CREATED_TEMP_DIR=true
 
 # Backup directory with timestamp
 BACKUP_DIR="$HOME/.config/backup_$(date +%Y%m%d_%H%M%S)"
@@ -23,7 +24,7 @@ CONFIGS=("nvim" "btop" "zsh")
 
 # Cleanup function
 cleanup() {
-    if [ -d "$TEMP_DIR" ]; then
+    if [ "${CREATED_TEMP_DIR:-false}" = true ] && [ -d "$TEMP_DIR" ]; then
         echo -e "${YELLOW}Cleaning up temporary files...${NC}"
         rm -rf "$TEMP_DIR"
     fi
@@ -36,10 +37,12 @@ echo -e "${GREEN}Starting configuration backup and update...${NC}"
 
 # Always clone from remote
 echo -e "${YELLOW}Fetching latest configs from GitHub...${NC}"
-rm -rf "$TEMP_DIR" 2>/dev/null
-git clone --depth 1 "$REPO_URL" "$TEMP_DIR"
-if [ $? -ne 0 ]; then
+# TEMP_DIR is created with mktemp and should be unique; do not remove preexisting paths
+if ! git clone --depth 1 "$REPO_URL" "$TEMP_DIR"; then
     echo -e "${RED}Error: Failed to clone repository${NC}"
+    if [ "${CREATED_TEMP_DIR:-false}" = true ] && [ -d "$TEMP_DIR" ]; then
+        rm -rf "$TEMP_DIR"
+    fi
     exit 1
 fi
 SOURCE_DIR="$TEMP_DIR"
